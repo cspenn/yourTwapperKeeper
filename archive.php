@@ -471,7 +471,7 @@ echo "RSS Permalink = <a href='$permrss'>$permrss</a><br>";
 echo "Excel Permalink = <a href='$permexcel'>$permexcel</a><br>";
 echo "Simple Table Permalink = <a href='$permtable'>$permtable</a><br>";
 echo "JSON API = <a href='$permjson'>$permjson</a><br>";
-echo "CSV PIPE DELIMITER = <a href='$permcsvpipe'>$permcsvpipe</a>";
+echo "CSV Pipe Delimited = <a href='$permcsvpipe'>$permcsvpipe</a>";
 echo "</h5>";
 ?>
 </center>
