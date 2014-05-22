@@ -40,40 +40,40 @@ function sanitize($input) {
 // list archives
 function listArchive($id=false,$keyword=false,$description=false,$tags=false,$screen_name=false,$debug=false) {
 	global $db;
-	
+
 	$q = "select * from archives where 1";
-	
+
 	if ($id) {
 	$q .= " and id = '$id'";
 	}
-	
+
 	if ($keyword) {
 	$q .= " and keyword like '%$keyword%'";
 	}
-	
+
 	if ($description) {
 	$q .= " and description like '%$description%'";
 	}
-	
+
 	if ($tags) {
 	$q .= " and tags like '%$tags%";
 	}
-	
+
 	if ($screen_name) {
 	$q .= " and screen_name like '%$screen_name%";
 	}
-	
-	
+
+
 	$r = mysql_query($q, $db->connection);
-	
+
 	$count = 0;
 	while ($row = mysql_fetch_assoc($r)){
 		$count++;
 		$response['results'][] = $row;
 	}
-	
+
 	$response['count'] = $count;
-	
+
 	return $response;
 	}
     
@@ -86,21 +86,21 @@ function createArchive($keyword,$description,$tags,$screen_name,$user_id,$debug=
 	$response[0] = "Archive for that keyword / hashtag already exists.";
 	return($response);
 	}
-	
+
 	if (strlen($keyword) < 1 || strlen($keyword) > 30) {
 	$response[0] = "Keyword / hashtag cannot be blank";
 	return($response);
 	}
-	
+
 	if (strlen($keyword) > 30) {
 	$response[0] = "Keyword / hashtag must be less than 30 characters.";
 	return($response);
 	}
-	
+
 	$q = "insert into archives values ('','$keyword','$description','$tags','$screen_name','$user_id','','".time()."')";
 	$r = mysql_query($q, $db->connection);
 	$lastid = mysql_insert_id();
-		
+
     $create_table = "CREATE TABLE IF NOT EXISTS `z_$lastid` (
         `archivesource` varchar(100) NOT NULL,
         `text` varchar(1000) NOT NULL,
@@ -134,7 +134,7 @@ function createArchive($keyword,$description,$tags,$screen_name,$user_id,$debug=
 // get tweets
 function getTweets($id,$start=false,$end=false,$limit=false,$orderby=false,$nort=false,$from_user=false,$text=false,$lang=false,$max_id=false,$since_id=false,$offset=false,$lat=false,$long=false,$rad=false,$debug=false) {
 	global $db;
-	
+
 	$response = array();
     $type = $this->sanitize($type);
     $name = $this->sanitize($name);
@@ -152,9 +152,9 @@ function getTweets($id,$start=false,$end=false,$limit=false,$orderby=false,$nort
     $lat = $this->sanitize($lat);
     $long = $this->sanitize($long);
     $rad = $this->sanitize($rad);  
-	
+
 	$q = "select * from z_".$id." where 1";
-	
+
 	// build param query
     $qparam = '';
     
@@ -188,13 +188,13 @@ function getTweets($id,$start=false,$end=false,$limit=false,$orderby=false,$nort
         				}
 
 	if ($orderby == "a") {$qparam .= " order by time asc";} else {$qparam .= " order by time desc";}
-	
+
 	if ($limit) 		 {$qparam .= " limit $limit";}
-	
+
 	$query = $q.$qparam;
-	
+
     $r = mysql_query($query, $db->connection);
-	
+
 	$response = array();
 	while ($row = mysql_fetch_assoc($r)) {
 		$response[] = $row;
@@ -207,14 +207,14 @@ function deleteArchive($id) {
 	global $db;
 	$q = "delete from archives where id = '$id'";
 	$r = mysql_query($q, $db->connection);
-	
+
 	$q = "drop table if exists z_$id";
 	$r = mysql_query($q, $db->connection);
-	
+
 	$response[0] = "Archive has been deleted.";
 	return($response);
-	
-	
+
+
 	}
 
 // update archive
@@ -227,7 +227,7 @@ function updateArchive($id,$description,$tags) {
 	$response[0] = "Archive has updated.";
 	return($response);
 	}
-	
+
 // check status of archiving processes	
 function statusArchiving($process_array) {
 	global $db;
@@ -251,7 +251,7 @@ function statusArchiving($process_array) {
 		}
 	}
 	$pids = substr($pids, 0, -1);
-	
+
 	$result = array();
 	if ($running == FALSE) {
 	$result[0] = FALSE;
@@ -260,12 +260,12 @@ function statusArchiving($process_array) {
 	} else {
 		$result[1] = "<div style='color:red'>Archiving processes are NOT running</div>";
 	}
-	
+
 	} else {
 	$result[0] = TRUE;
 	$result[1] = "<div style='color:green'>Archiving processes are running (PIDS = $pids)</div>";
 	}	
-	
+
 	return($result);
 }
     
@@ -278,10 +278,13 @@ function killProcess($pid) {
 
 // start archiving process
 function startProcess($cmd) {
-	$command = "$cmd > /dev/null 2>&1 & echo $!";
-    exec($command ,$op);
-    $pid = (int)$op[0];
-    return ($pid);
+	$logfile="/tmp/twapper.out";
+	$fh = fopen($logfile, 'a');
+	fwrite($fh, "$cmd\n");
+	fclose($fh);
+	$command = "$cmd > /dev/null 2>&1 & echo $!"; exec($command ,$op);
+	$pid = (int)$op[0];
+	return ($pid);
 }	
 
 
